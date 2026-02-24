@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sqlalchemy import String, ForeignKey
+from sqlalchemy import String, Index
 from sqlalchemy.orm import Mapped, mapped_column,relationship
 from app.database import Base
 
@@ -17,4 +17,8 @@ class User(Base):
     items: Mapped[list["Item"]] = relationship(
         "app.models.item.Item",
         back_populates="user"
+    )
+
+    __table_args__ = (
+        Index("username_index", "username"),
     )

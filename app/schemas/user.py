@@ -8,6 +8,8 @@ class UserBase(BaseModel):
 class UserPydantic(UserBase):
     id: int
 
+    model_config = ConfigDict(from_attributes=True)
+
 class UserCreate(UserBase):
     password: str
 

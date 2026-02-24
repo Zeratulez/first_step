@@ -15,16 +15,16 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[ItemPydantic])
-def get_items(search: Annotated[str | None, Query()],
-              session: Annotated[Session, Depends(get_session)],
+def get_items(session: Annotated[Session, Depends(get_session)],
+              search: Annotated[str | None, Query()] = "",
               skip: Annotated[int| None, Query(ge=0)] = None,
               limit: Annotated[int | None, Query(ge= 1, le=100)] = None):
     
     query = select(Item).filter(Item.name.contains(search)).offset(skip).limit(limit)
-    result = session.execute(query)
-    if len(result.scalars().all()) == 0:
+    result = session.scalars(query).all()
+    if len(result) == 0:
         raise HTTPException(status_code=404, detail="Items not found")
-    return result.scalars().all()
+    return result
 
 @router.post("/create", response_model=ItemPydantic)
 def create_item(session: Annotated[Session, Depends(get_session)],
@@ -37,7 +37,7 @@ def create_item(session: Annotated[Session, Depends(get_session)],
     session.refresh(new_item)
     return new_item
 
-@router.put("/update/{item_id}", response_model=ItemPydantic)
+@router.patch("/update/{item_id}", response_model=ItemPydantic)
 def update_item(session: Annotated[Session, Depends(get_session)],
                 item_id: int,
                 user: Annotated[UserInDB, Depends(get_current_user)],
@@ -49,13 +49,14 @@ def update_item(session: Annotated[Session, Depends(get_session)],
     elif item_db.owner_id != user.id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You not the owner of the Item")
     item_data = item.model_dump(exclude_unset=True)
+    print(f"PRINTED DATA:{item_data}")
     for key, value in item_data.items():
         setattr(item_db, key, value)
     session.commit()
     session.refresh(item_db)
     return item_db
 
-@router.post("/delete/{item_id}")
+@router.delete("/delete/{item_id}")
 def delete_item(session: Annotated[Session, Depends(get_session)],
                 item_id: int,
                 user: Annotated[UserInDB, Depends(get_current_user)]):
