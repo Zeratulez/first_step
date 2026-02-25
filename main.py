@@ -1,11 +1,9 @@
-from typing import Annotated
-from fastapi import FastAPI, Body
-from pydantic import BaseModel, Field
+from fastapi import FastAPI
 
-from app.crud import crud_item, crud_user
+from app.api.endpoints import items, auth
 
 ap = FastAPI()
 
-ap.include_router(crud_item.router)
-ap.include_router(crud_user.router)
+ap.include_router(items.router)
+ap.include_router(auth.router)
 

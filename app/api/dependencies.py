@@ -2,16 +2,18 @@ from typing import Annotated
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from app.models.user import User
 from sqlalchemy.orm import Session
-from app.database import get_session
-from app.schemas.user import UserInDB
 from pwdlib import PasswordHash
-from app.api.config import settings
 from pydantic import BaseModel
 from jose import jwt, JWTError
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/user/token")
+from app.models.user import User
+from app.database import get_session
+from app.crud import crud_user
+from app.core.config import settings
+from app.schemas.user_schema import UserInDB
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 password_hash = PasswordHash.recommended()
 
 class Token(BaseModel):
@@ -21,17 +23,11 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: str | None = None
 
-def get_user(username: str, session: Session) -> UserInDB | None:
 
-    user = session.query(User).filter(User.username == username).first()
-    if user is None:
-        return None
-    return UserInDB.model_validate(user)
-
-
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],
-                     session: Annotated[Session, Depends(get_session)]) -> UserInDB:
-    
+def get_current_user(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        session: Annotated[Session, Depends(get_session)]
+) -> UserInDB:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -55,23 +51,20 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],
 
 
 def verify_password(plain_password, hashed_password):
-
     return password_hash.verify(plain_password, hashed_password)
 
 
 def hash_password(plain_password):
-    
     return password_hash.hash(plain_password)
 
 
-def authenticate_user(username: str, password: str, session: Session):
-
-    user: UserInDB = get_user(username, session)
+def authenticate_user(session: Session, username: str, password: str) -> UserInDB | None:
+    user = crud_user.get_user_by_username(session, username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
         return False
-    return user
+    return UserInDB.model_validate(user)
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
