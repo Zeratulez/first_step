@@ -10,6 +10,9 @@ from alembic import context
 
 from app.models.user import User
 from app.models.item import Item
+from app.models.post import Post
+from app.models.comment import Comment
+from app.models.like import PostLike, CommentLike
 from app.database import Base
 
 
@@ -75,7 +78,9 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection, 
+            target_metadata=target_metadata,
+            compare_server_default=True
         )
 
         with context.begin_transaction():

@@ -1,0 +1,98 @@
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
+from sqlalchemy.orm import Session
+
+from app.schemas import post_schema, user_schema, comment_schema
+from app.database import get_session
+from app.crud import crud_posts, crud_comments
+from app.api.dependencies import get_current_user
+
+router = APIRouter(
+    prefix="/posts",
+    tags=["posts"]
+)
+
+@router.get("/", response_model=list[post_schema.PostPydantic])
+def get_posts(
+    session: Annotated[Session, Depends(get_session)],
+    search: Annotated[str | None, Query()] = "",
+    skip: Annotated[int | None, Query(ge=0)] = 0,
+    limit: Annotated[int | None, Query(ge=1, le=100)] = 10,
+):
+    posts = crud_posts.get_posts(session, search, skip, limit)
+    return posts
+
+@router.post("/create_post", response_model=post_schema.PostPydantic)
+def create_post(
+    session: Annotated[Session, Depends(get_session)],
+    user: Annotated[user_schema.UserInDB, Depends(get_current_user)],
+    post_data: Annotated[post_schema.PostCreate, Body()],
+):
+    new_post = crud_posts.create_post(session, user, post_data)
+    return new_post
+
+@router.patch("/update/{post_id}", response_model=post_schema.PostPydantic)
+def update_item(
+    session: Annotated[Session, Depends(get_session)],
+    user: Annotated[user_schema.UserInDB, Depends(get_current_user)],
+    post_data: Annotated[post_schema.PostUpdate, Body()],
+    post_id: int,
+):
+    post_db = crud_posts.get_post_by_id(session, post_id)
+    if not post_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+    if post_db.author_id != user.id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You not the author of the post")
+    updated_post = crud_posts.update_post(session, post_db, post_data)
+    return updated_post
+
+@router.delete("/delete/{post_id}")
+def delete_post(
+    session: Annotated[Session, Depends(get_session)],
+    user: Annotated[user_schema.UserInDB, Depends(get_current_user)],
+    post_id: int
+):
+    post = crud_posts.get_post_by_id(session, post_id)
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+    if post.author_id != user.id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You not the author of the post")
+    return crud_posts.delete_post(session, post)
+
+@router.get("/{post_id}", response_model=post_schema.PostPydantic)
+def get_post(
+    session: Annotated[Session, Depends(get_session)],
+    post_id: int
+):
+    post = crud_posts.get_post_by_id(session, post_id)
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+    return post
+
+@router.get("/{post_id}/comments", response_model=list[comment_schema.CommentPydantic])
+def get_post_comments(
+    session: Annotated[Session, Depends(get_session)],
+    post_id: int,
+    skip: Annotated[int | None, Query(ge=0)] = 0,
+    limit: Annotated[int | None, Query(ge=1, le=100)] = 10,
+):
+    post = crud_posts.get_post_by_id(session, post_id)
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+    comments = crud_comments.get_post_comments(session, post_id, skip, limit)
+    return comments
+
+@router.post("/{post_id}/create_comment", response_model=comment_schema.CommentPydantic)
+def create_comment(
+    session: Annotated[Session, Depends(get_session)],
+    comment_data: Annotated[comment_schema.CommentCreate, Body()],
+    user: Annotated[user_schema.UserInDB, Depends(get_current_user)],
+    post_id: int,
+):
+    post = crud_posts.get_post_by_id(session, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    new_comment = crud_comments.create_comment(session, comment_data, user, post_id)
+    return new_comment
+
+    

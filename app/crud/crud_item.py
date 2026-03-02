@@ -13,7 +13,6 @@ def get_items(
 ): 
     query = select(Item).filter(Item.name.contains(search)).offset(skip).limit(limit)
     result = session.scalars(query).all()
-    print(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>{result}")
     return result
 
 def create_item(

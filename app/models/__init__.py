@@ -1,2 +1,5 @@
 from app.models.user import User
 from app.models.item import Item
+from app.models.post import Post
+from app.models.comment import Comment
+from app.models.like import PostLike, CommentLike

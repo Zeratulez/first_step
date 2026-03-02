@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, ConfigDict, computed_field
 
 
 class ItemBase(BaseModel):
-    name: str
+    name: str = Field(min_length=3, max_length=50)
     description: str | None = None
     price: float = Field(ge=0)
     tax: float | None = None
@@ -23,7 +23,7 @@ class ItemCreate(ItemBase):
     pass
 
 class ItemUpdate(ItemBase):
-    name: str | None = None
+    name: str | None = Field(default=None, min_length=3, max_length=50)
     description: str | None = None
     price: float | None = Field(default=None, ge=0)
     tax: float | None = None
@@ -31,3 +31,5 @@ class ItemUpdate(ItemBase):
 class ItemInDB(ItemBase):
     id: int
     owner_id: int
+
+    model_config = ConfigDict(from_attributes=True)
