@@ -35,10 +35,12 @@ class User(Base):
         back_populates="user"
     )
 
+    # relationship to get post_likes
     posts_likes: Mapped[list["PostLike"]] = relationship(
         "app.models.like.PostLike",
         back_populates="user"
     )
+    # relationship to get Posts through post_likes model
     liked_posts: Mapped[list["Post"]] = relationship(
         "app.models.post.Post",
         secondary="post_likes",
@@ -46,10 +48,12 @@ class User(Base):
         viewonly=True
     )
 
+    # relationship to get comment_likes
     comments_likes: Mapped[list["CommentLike"]] = relationship(
         "app.models.like.CommentLike",
         back_populates="user"
     )
+    # relationship to get Comments through comment_likes model
     liked_comment: Mapped[list["Comment"]] = relationship(
         "app.models.comment.Comment",
         secondary="comment_likes",

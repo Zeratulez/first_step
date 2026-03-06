@@ -2,9 +2,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 from sqlalchemy.orm import Session
 
-from app.schemas import comment_schema, user_schema
+from app.schemas import comment_schema, user_schema, comment_like_schema
 from app.database import get_session
-from app.crud import crud_comments
+from app.crud import crud_comments, crud_likes
 from app.api.dependencies import get_current_user
 
 router = APIRouter(
@@ -57,3 +57,15 @@ def delete_comment(
     if comment.author_id != user.id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You not the author of the comment")
     return crud_comments.delete_comment(session, comment)
+
+@router.post("/{comment_id}/like", response_model=comment_like_schema.CommentLikePydantic | dict)
+def like_comment(
+    session: Annotated[Session, Depends(get_session)],
+    user: Annotated[user_schema.UserInDB, Depends(get_current_user)],
+    comment_id: int,
+):
+    comment = crud_comments.get_comment_by_id(session, comment_id)
+    if not comment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found")
+    like = crud_likes.like_comment(session, user, comment)
+    return like

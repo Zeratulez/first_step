@@ -2,9 +2,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 from sqlalchemy.orm import Session
 
-from app.schemas import post_schema, user_schema, comment_schema
+from app.schemas import post_schema, user_schema, comment_schema, post_like_schema
 from app.database import get_session
-from app.crud import crud_posts, crud_comments
+from app.crud import crud_posts, crud_comments, crud_likes
 from app.api.dependencies import get_current_user
 
 router = APIRouter(
@@ -32,7 +32,7 @@ def create_post(
     return new_post
 
 @router.patch("/update/{post_id}", response_model=post_schema.PostPydantic)
-def update_item(
+def update_post(
     session: Annotated[Session, Depends(get_session)],
     user: Annotated[user_schema.UserInDB, Depends(get_current_user)],
     post_data: Annotated[post_schema.PostUpdate, Body()],
@@ -59,7 +59,7 @@ def delete_post(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You not the author of the post")
     return crud_posts.delete_post(session, post)
 
-@router.get("/{post_id}", response_model=post_schema.PostPydantic)
+@router.get("/post/{post_id}", response_model=post_schema.PostPydantic)
 def get_post(
     session: Annotated[Session, Depends(get_session)],
     post_id: int
@@ -95,4 +95,14 @@ def create_comment(
     new_comment = crud_comments.create_comment(session, comment_data, user, post_id)
     return new_comment
 
-    
+@router.post("/{post_id}/like", response_model=post_like_schema.PostLikePydantic | dict)
+def like_post(
+    session: Annotated[Session, Depends(get_session)],
+    user: Annotated[user_schema.UserInDB, Depends(get_current_user)],
+    post_id: int
+):
+    post = crud_posts.get_post_by_id(session, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    like = crud_likes.like_post(session, user, post)
+    return like

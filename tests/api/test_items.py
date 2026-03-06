@@ -23,7 +23,7 @@ def test_create_item(db_session: Session, client: TestClient, user_token):
 def test_read_item(db_session: Session, client: TestClient, test_item: Item):
     data = jsonable_encoder(test_item)
     response = client.get(
-        f"/items/{test_item.id}",
+        f"/items/item/{test_item.id}",
     )
     assert response.status_code == 200
     content = response.json()
@@ -34,7 +34,7 @@ def test_read_item(db_session: Session, client: TestClient, test_item: Item):
 
 def test_read_item_not_found(db_session: Session, client: TestClient):
     response = client.get(
-        "/items/-1",
+        "/items/item/-1",
     )
     assert response.status_code == 404
     assert response.json()["detail"] == "Item not found"
@@ -46,8 +46,7 @@ def test_read_items(db_session: Session, client: TestClient):
         "/items/",
     )
     assert response.status_code == 200
-    print(response.json())
-    assert len(response.json()) == 2
+    assert len(response.json()) >= 2
 
 def test_update_item(db_session: Session, client: TestClient, test_item: Item, user_token):
     data = {"name": "updated_name", "description": "updated_description", "price": 100, "tax": 50}

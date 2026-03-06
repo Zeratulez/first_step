@@ -59,7 +59,7 @@ def delete_item(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You not the owner of the item")
     return crud_item.delete_item(session, item)
 
-@router.get("/{item_id}", response_model=item_schema.ItemPydantic)
+@router.get("/item/{item_id}", response_model=item_schema.ItemPydantic)
 def read_item(
     session: Annotated[Session, Depends(get_session)],
     item_id: int

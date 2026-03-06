@@ -1,5 +1,5 @@
-from datetime import datetime
 from __future__ import annotations
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from sqlalchemy import String, ForeignKey, CheckConstraint, Index, UniqueConstraint, text
@@ -17,7 +17,7 @@ class PostLike(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id", ondelete="CASCADE"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("TIMEZONE('utc', now())"))
+    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
 
     user: Mapped["User"] = relationship(
         "app.models.user.User",
@@ -41,7 +41,7 @@ class CommentLike(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     comment_id: Mapped[int] = mapped_column(ForeignKey("comments.id", ondelete="CASCADE"))
-    created_at: Mapped[datetime] = mapped_column(server_default=text("TIMEZONE('utc', now())"))
+    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
 
     user: Mapped["User"] = relationship(
         "app.models.user.User",

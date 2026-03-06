@@ -1,5 +1,3 @@
-import random
-import string
 from sqlalchemy.orm import Session
 
 from tests.utils.users import create_random_user

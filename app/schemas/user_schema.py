@@ -24,4 +24,8 @@ class UserInDB(UserBase):
     hashed_password: str
     is_active: bool
 
-    model_config = ConfigDict(from_attributes=True) 
+    model_config = ConfigDict(from_attributes=True)
+
+class UpdatePassword(BaseModel):
+    current_password: str
+    new_password: str
