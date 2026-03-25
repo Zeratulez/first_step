@@ -8,6 +8,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
+from app.core.config import settings
 from app.models.user import User
 from app.models.item import Item
 from app.models.post import Post
@@ -25,7 +26,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-config.set_main_option("sqlalchemy.url", "postgresql://postgres:1423@localhost/fs")
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
