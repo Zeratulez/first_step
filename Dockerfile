@@ -36,7 +36,7 @@ RUN adduser \
 # into this layer.
 RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=bind,source=requirements.txt,target=requirements.txt \
-    pip install --no-cache-dir --upgrade -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip install --upgrade -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # Copy the source code into the container.
 COPY . .
