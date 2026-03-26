@@ -41,7 +41,7 @@ def test_unlike_comment(db_session: Session, client: TestClient, test_user: User
     comment = create_random_comment(db_session, post=post)
     like_comment(db_session, test_user, comment)
     response = client.post(
-        f"comments/{comment.id}/like",
+        f"/comments/{comment.id}/like",
         headers=user_token
     )
     assert response.status_code == 200

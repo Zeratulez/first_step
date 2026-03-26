@@ -9,7 +9,7 @@ def get_user_by_username(session: Session, username: str):
     return session.query(User).filter(User.username == username).first()
 
 def create_user(session: Session, user: user_schema.UserCreate, hashed_password: str):
-    new_user = User(**user.model_dump(exclude="password"), hashed_password=hashed_password, is_active=True)
+    new_user = User(**user.model_dump(exclude={"password"}), hashed_password=hashed_password, is_active=True)
     session.add(new_user)
     session.commit()
     session.refresh(new_user)

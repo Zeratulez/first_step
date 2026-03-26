@@ -47,10 +47,10 @@ def login_for_access_token(
 @router.post("/reset_password")
 def reset_password(
     session: Annotated[Session, Depends(get_session)],
-    body: Annotated[str, Body()],
+    email_body: Annotated[str, Body()],
     new_password: Annotated[str, Body()],
 ):
-    email = verify_password_reset_token(body)
+    email = verify_password_reset_token(email_body)
     if not email:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token")
     user = crud_user.get_user_by_email(session, email)
