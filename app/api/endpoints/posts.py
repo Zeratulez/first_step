@@ -1,3 +1,4 @@
+import json
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 from sqlalchemy.orm import Session
@@ -6,11 +7,21 @@ from app.schemas import post_schema, user_schema, comment_schema, post_like_sche
 from app.database import get_session
 from app.crud import crud_posts, crud_comments, crud_likes
 from app.api.dependencies import get_current_user
+from app.core.redis_client import redis_client
 
 router = APIRouter(
     prefix="/posts",
     tags=["posts"]
 )
+
+@router.get("/redis-test")
+def test_redis():
+    try:
+        redis_client.set("test_key", "test_value", ex=10)
+        val = redis_client.get("test_key")
+        return {"status": "ok", "value": val}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @router.get("/", response_model=list[post_schema.PostPydantic])
 def get_posts(
@@ -19,7 +30,13 @@ def get_posts(
     skip: Annotated[int | None, Query(ge=0)] = 0,
     limit: Annotated[int | None, Query(ge=1, le=100)] = 10,
 ):
+    cache_key = f"posts:search={search}:skip={skip}:limit={limit}"
+    cached = redis_client.get(cache_key)
+    if cached:
+        return json.loads(cached)
     posts = crud_posts.get_posts(session, search, skip, limit)
+    posts_data = [post_schema.PostPydantic.model_validate(post).model_dump(mode="json") for post in posts]
+    redis_client.setex(cache_key, 300, json.dumps(posts_data))
     return posts
 
 @router.post("/create_post", response_model=post_schema.PostPydantic)
