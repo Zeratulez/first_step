@@ -14,14 +14,6 @@ router = APIRouter(
     tags=["posts"]
 )
 
-@router.get("/redis-test")
-def test_redis():
-    try:
-        redis_client.set("test_key", "test_value", ex=10)
-        val = redis_client.get("test_key")
-        return {"status": "ok", "value": val}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
 
 @router.get("/", response_model=list[post_schema.PostPydantic])
 def get_posts(

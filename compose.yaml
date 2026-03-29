@@ -19,8 +19,6 @@ services:
       redis:
         condition: service_healthy
     env_file: .env
-    environment:
-      REDIS_URL: ${REDIS_URL}
     develop:
       watch:
         - action: sync
