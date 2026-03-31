@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.models.post import Post
 from app.schemas import post_schema, user_schema
+from app.api.dependencies import invalidate_cache
 
 
 def get_posts(
@@ -24,6 +25,7 @@ def create_post(
     session.add(new_post)
     session.commit()
     session.refresh(new_post)
+    invalidate_cache()
     return new_post
 
 def get_post_by_id(session: Session, post_id: int):
@@ -38,9 +40,11 @@ def update_post(
         setattr(post_db, key, value)
     session.commit()
     session.refresh(post_db)
+    invalidate_cache()
     return post_db
 
 def delete_post(session: Session, post: Post):
     session.delete(post)
     session.commit()
+    invalidate_cache()
     return {"message": "post deleted"}

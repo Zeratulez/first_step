@@ -12,6 +12,7 @@ from app.database import get_session
 from app.crud import crud_user
 from app.core.config import settings
 from app.schemas.user_schema import UserInDB
+from app.core.redis_client import redis_client
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 password_hash = PasswordHash.recommended()
@@ -91,3 +92,8 @@ def generate_reset_token(email: EmailStr):
     to_encode = {"sub": email, "exp": expire}
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
+
+def invalidate_cache():
+    keys = redis_client.keys("posts:*")
+    if keys:
+        redis_client.delete(*keys)

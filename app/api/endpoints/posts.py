@@ -73,9 +73,15 @@ def get_post(
     session: Annotated[Session, Depends(get_session)],
     post_id: int
 ):
+    cache_key = f"post:{post_id}"
+    cached = redis_client.get(cache_key)
+    if cached:
+        return json.loads(cached)
     post = crud_posts.get_post_by_id(session, post_id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+    post_data = post_schema.PostPydantic.model_validate(post).model_dump(mode="json")
+    redis_client.setex(cache_key, 60, json.dumps(post_data))
     return post
 
 @router.get("/{post_id}/comments", response_model=list[comment_schema.CommentPydantic])
