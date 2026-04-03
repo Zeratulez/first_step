@@ -1,4 +1,5 @@
 import sys
+import fakeredis
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 import pytest
@@ -7,6 +8,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, delete, Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
+from unittest.mock import patch
 
 from main import ap
 from app.models import User, Item
@@ -44,6 +46,13 @@ def client(db_session):
         yield test_client
     
     ap.dependency_overrides.clear()
+
+@pytest.fixture(autouse=True)
+def mock_redis():
+    fake = fakeredis.FakeRedis(decode_responses=True)
+    with patch("app.core.redis_client.redis_client", fake):
+        with patch("app.api.endpoints.posts.redis_client", fake):
+            yield fake
 
 @pytest.fixture
 def test_user(db_session):

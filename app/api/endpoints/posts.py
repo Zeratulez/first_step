@@ -7,7 +7,7 @@ from app.schemas import post_schema, user_schema, comment_schema, post_like_sche
 from app.database import get_session
 from app.crud import crud_posts, crud_comments, crud_likes
 from app.api.dependencies import get_current_user
-from app.core.redis_client import redis_client
+from app.core.redis_client import redis_client, invalidate_cache
 
 router = APIRouter(
     prefix="/posts",
@@ -38,6 +38,7 @@ def create_post(
     post_data: Annotated[post_schema.PostCreate, Body()],
 ):
     new_post = crud_posts.create_post(session, user, post_data)
+    invalidate_cache()
     return new_post
 
 @router.patch("/update/{post_id}", response_model=post_schema.PostPydantic)
@@ -53,6 +54,7 @@ def update_post(
     if post_db.author_id != user.id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You not the author of the post")
     updated_post = crud_posts.update_post(session, post_db, post_data)
+    invalidate_cache(post_id)
     return updated_post
 
 @router.delete("/delete/{post_id}")
@@ -66,6 +68,7 @@ def delete_post(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
     if post.author_id != user.id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You not the author of the post")
+    invalidate_cache(post_id)
     return crud_posts.delete_post(session, post)
 
 @router.get("/post/{post_id}", response_model=post_schema.PostPydantic)

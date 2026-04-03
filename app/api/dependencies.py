@@ -2,17 +2,17 @@ from typing import Annotated
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status, Path
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from pwdlib import PasswordHash
 from pydantic import BaseModel, EmailStr
 from jose import jwt, JWTError
 
 from app.models.user import User
-from app.database import get_session
+from app.database import get_async_session
 from app.crud import crud_user
 from app.core.config import settings
 from app.schemas.user_schema import UserInDB
-from app.core.redis_client import redis_client
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 password_hash = PasswordHash.recommended()
@@ -25,9 +25,9 @@ class TokenData(BaseModel):
     username: str | None = None
 
 
-def get_current_user(
+async def get_current_user(
         token: Annotated[str, Depends(oauth2_scheme)],
-        session: Annotated[Session, Depends(get_session)]
+        session: Annotated[AsyncSession, Depends(get_async_session)]
 ) -> UserInDB:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -42,7 +42,9 @@ def get_current_user(
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = session.query(User).filter(User.username == token_data.username).first()
+    query = select(User).filter(User.username == token_data.username)
+    result = await session.execute(query)
+    user = result.scalar_one_or_none()
     if user is None:
         raise credentials_exception
     user = UserInDB.model_validate(user)
@@ -59,8 +61,8 @@ def hash_password(plain_password):
     return password_hash.hash(plain_password)
 
 
-def authenticate_user(session: Session, username: str, password: str) -> UserInDB | None:
-    user = crud_user.get_user_by_username(session, username)
+async def authenticate_user(session: AsyncSession, username: str, password: str) -> UserInDB | None:
+    user =  await crud_user.get_user_by_username(session, username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -92,8 +94,3 @@ def generate_reset_token(email: EmailStr):
     to_encode = {"sub": email, "exp": expire}
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
-
-def invalidate_cache():
-    keys = redis_client.keys("posts:*")
-    if keys:
-        redis_client.delete(*keys)
