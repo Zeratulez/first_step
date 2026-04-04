@@ -4,7 +4,6 @@ from fastapi import Depends, HTTPException, status, Path
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from pwdlib import PasswordHash
 from pydantic import BaseModel, EmailStr
 from jose import jwt, JWTError
 
@@ -13,9 +12,9 @@ from app.database import get_async_session
 from app.crud import crud_user
 from app.core.config import settings
 from app.schemas.user_schema import UserInDB
+from app.core.security import verify_password, hash_password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
-password_hash = PasswordHash.recommended()
 
 class Token(BaseModel):
     access_token: str
@@ -51,14 +50,6 @@ async def get_current_user(
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return user
-
-
-def verify_password(plain_password, hashed_password):
-    return password_hash.verify(plain_password, hashed_password)
-
-
-def hash_password(plain_password):
-    return password_hash.hash(plain_password)
 
 
 async def authenticate_user(session: AsyncSession, username: str, password: str) -> UserInDB | None:
