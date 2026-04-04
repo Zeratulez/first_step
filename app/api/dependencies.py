@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, status, Path
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from jose import jwt, JWTError
 
 from app.models.user import User
@@ -59,29 +59,3 @@ async def authenticate_user(session: AsyncSession, username: str, password: str)
     if not verify_password(password, user.hashed_password):
         return False
     return UserInDB.model_validate(user)
-
-
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
-
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    return encoded_jwt
-
-def verify_password_reset_token(token: str):
-    token_data = generate_reset_token(token)
-    try:
-        decoded_token = jwt.decode(token_data, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        return decoded_token["sub"]
-    except JWTError:
-        return None
-    
-def generate_reset_token(email: EmailStr):
-    expire = datetime.now(timezone.utc) + timedelta(minutes=10)
-    to_encode = {"sub": email, "exp": expire}
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    return encoded_jwt
