@@ -1,61 +1,58 @@
 import sys
-import fakeredis
+from fakeredis import FakeAsyncRedis
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 import pytest
-from collections.abc import Generator
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, delete, Engine
-from sqlalchemy.orm import Session, sessionmaker
+from httpx import AsyncClient, ASGITransport
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncSession
 from sqlalchemy.pool import StaticPool
 from unittest.mock import patch
 
 from main import ap
 from app.models import User, Item
-from app.database import Base, get_session
+from app.database import Base, get_async_session
 from app.api.dependencies import hash_password
 
-TEST_DATABASE_URL = "sqlite:///:memory:"
-test_engine = create_engine(
+TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+test_engine = create_async_engine(
     url=TEST_DATABASE_URL,
     connect_args={"check_same_thread": False},
     poolclass=StaticPool
 )
-TestSession = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+TestSession = async_sessionmaker(autocommit=False, autoflush=False, bind=test_engine, expire_on_commit=False)
 
 @pytest.fixture
-def db_session():
-    Base.metadata.create_all(test_engine)
-    session = TestSession()
-    try:
+async def db_session():
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    async with TestSession() as session:
         yield session
-    finally:
-        session.close()
-        Base.metadata.drop_all(test_engine)
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
 
 @pytest.fixture
-def client(db_session):
+async def client(db_session):
     def override_get_test_session():
         try:
             yield db_session
         finally:
             pass
-    ap.dependency_overrides[get_session] = override_get_test_session
+    ap.dependency_overrides[get_async_session] = override_get_test_session
 
-    with TestClient(ap) as test_client:
+    async with AsyncClient(transport=ASGITransport(app=ap), base_url="http://test") as test_client:
         yield test_client
     
     ap.dependency_overrides.clear()
 
 @pytest.fixture(autouse=True)
-def mock_redis():
-    fake = fakeredis.FakeRedis(decode_responses=True)
+async def mock_redis():
+    fake = FakeAsyncRedis(decode_responses=True)
     with patch("app.core.redis_client.redis_client", fake):
         with patch("app.api.endpoints.posts.redis_client", fake):
             yield fake
 
 @pytest.fixture
-def test_user(db_session):
+async def test_user(db_session: AsyncSession):
     user = User(
         username= "bazuka",
         email="bazuka@example.com",
@@ -63,13 +60,13 @@ def test_user(db_session):
         is_active=True,
     )
     db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+    await db_session.commit()
+    await db_session.refresh(user)
     return user
 
 @pytest.fixture
-def user_token(client, test_user):
-    response = client.post(
+async def user_token(client: AsyncClient, test_user: User):
+    response = await client.post(
         "/auth/login",
         data={"username": test_user.username, "password": "123"},
     )
@@ -78,7 +75,7 @@ def user_token(client, test_user):
     return headers
 
 @pytest.fixture
-def test_item(db_session, test_user):
+async def test_item(db_session: AsyncSession, test_user: User):
     item = Item(
         name="apple",
         description="fruit",
@@ -87,6 +84,6 @@ def test_item(db_session, test_user):
         owner_id=test_user.id
     )
     db_session.add(item)
-    db_session.commit()
-    db_session.refresh(item)
+    await db_session.commit()
+    await db_session.refresh(item)
     return item

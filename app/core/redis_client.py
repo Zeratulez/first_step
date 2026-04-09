@@ -1,14 +1,14 @@
-import redis
+from redis.asyncio import from_url
 from app.core.config import settings
 
-redis_client = redis.from_url(
+redis_client = from_url(
     settings.REDIS_URL,
     decode_responses=True
 )
 
-def invalidate_cache(post_id: int | None = None):
-    keys = redis_client.keys("posts:*")
+async def invalidate_cache(post_id: int | None = None):
+    keys = await redis_client.keys("posts:*")
     if keys:
-        redis_client.delete(*keys)
+        await redis_client.delete(*keys)
     if post_id is not None:
-        redis_client.delete(f"post:{post_id}")
+        await redis_client.delete(f"post:{post_id}")

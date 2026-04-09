@@ -15,7 +15,6 @@ async def get_posts(
     result = await session.execute(query)
     return result.scalars().all()
 
-
 async def create_post(
         session: AsyncSession,
         user: user_schema.UserInDB,
@@ -29,7 +28,6 @@ async def create_post(
 
 async def get_post_by_id(session: AsyncSession, post_id: int):
     return await session.get(Post, post_id)
-
 
 async def update_post(
         session: AsyncSession,

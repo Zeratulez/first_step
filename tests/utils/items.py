@@ -1,12 +1,12 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.utils.users import create_random_user
 from tests.utils.utils import random_lower_string
 from app.models import Item
 
 
-def create_random_item(db_session: Session):
-    user = create_random_user(db_session)
+async def create_random_item(db_session: AsyncSession):
+    user = await create_random_user(db_session)
     item = Item(
         name=random_lower_string(),
         description=random_lower_string(),
@@ -15,6 +15,6 @@ def create_random_item(db_session: Session):
         owner_id=user.id
     )
     db_session.add(item)
-    db_session.commit()
-    db_session.refresh(item)
+    await db_session.commit()
+    await db_session.refresh(item)
     return item

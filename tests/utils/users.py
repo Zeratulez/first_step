@@ -1,11 +1,11 @@
-from sqlalchemy.orm import Session
-from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import AsyncSession
+from httpx import AsyncClient
 
-from app.api.dependencies import hash_password
+from app.core.security import hash_password
 from app.models import User
 from tests.utils.utils import random_lower_string
 
-def create_random_user(db_session: Session):
+async def create_random_user(db_session: AsyncSession):
     user = User(
         username=random_lower_string(),
         email=f"{random_lower_string()}@{random_lower_string()}.com",
@@ -13,13 +13,13 @@ def create_random_user(db_session: Session):
         is_active=True,
     )
     db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+    await db_session.commit()
+    await db_session.refresh(user)
     return user
 
-def random_user_token(db_session: Session, client: TestClient):
-    user = create_random_user(db_session)
-    response = client.post(
+async def random_user_token(db_session: AsyncSession, client: AsyncClient):
+    user = await create_random_user(db_session)
+    response = await client.post(
         "/auth/login",
         data={"username": user.username, "password": "123"},
     )

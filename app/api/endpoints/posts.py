@@ -69,7 +69,7 @@ async def delete_post(
     if post.author_id != user.id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You not the author of the post")
     await invalidate_cache(post_id)
-    return crud_posts.delete_post(session, post)
+    return await crud_posts.delete_post(session, post)
 
 @router.get("/post/{post_id}", response_model=post_schema.PostPydantic)
 async def get_post(

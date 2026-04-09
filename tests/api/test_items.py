@@ -1,14 +1,14 @@
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Item, User
 from tests.utils.items import create_random_item
 from tests.utils.users import random_user_token
 
-def test_create_item(db_session: Session, client: TestClient, user_token):
+async def test_create_item(db_session: AsyncSession, client: AsyncClient, user_token):
     data = {"name": "bar", "description": "karamba", "price": 10, "tax": 2.5}
-    response = client.post(
+    response = await client.post(
         "/items/create_item",
         headers=user_token,
         json=data,
@@ -20,9 +20,9 @@ def test_create_item(db_session: Session, client: TestClient, user_token):
     assert "id" in content
     assert "owner_id" in content
 
-def test_read_item(db_session: Session, client: TestClient, test_item: Item):
+async def test_read_item(db_session: AsyncSession, client: AsyncClient, test_item: Item):
     data = jsonable_encoder(test_item)
-    response = client.get(
+    response = await client.get(
         f"/items/item/{test_item.id}",
     )
     assert response.status_code == 200
@@ -32,25 +32,25 @@ def test_read_item(db_session: Session, client: TestClient, test_item: Item):
     assert content["id"] == data["id"]
     assert content["owner_id"] == data["owner_id"]
 
-def test_read_item_not_found(db_session: Session, client: TestClient):
-    response = client.get(
+async def test_read_item_not_found(db_session: AsyncSession, client: AsyncClient):
+    response = await client.get(
         "/items/item/-1",
     )
     assert response.status_code == 404
     assert response.json()["detail"] == "Item not found"
 
-def test_read_items(db_session: Session, client: TestClient):
-    create_random_item(db_session)
-    create_random_item(db_session)
-    response = client.get(
+async def test_read_items(db_session: AsyncSession, client: AsyncClient):
+    await create_random_item(db_session)
+    await create_random_item(db_session)
+    response = await client.get(
         "/items/",
     )
     assert response.status_code == 200
     assert len(response.json()) >= 2
 
-def test_update_item(db_session: Session, client: TestClient, test_item: Item, user_token):
+async def test_update_item(db_session: AsyncSession, client: AsyncClient, test_item: Item, user_token):
     data = {"name": "updated_name", "description": "updated_description", "price": 100, "tax": 50}
-    response = client.patch(
+    response = await client.patch(
         f"/items/update/{test_item.id}",
         headers=user_token,
         json=data
@@ -64,9 +64,9 @@ def test_update_item(db_session: Session, client: TestClient, test_item: Item, u
     assert content["id"] == test_item.id
     assert content["owner_id"] == test_item.owner_id
 
-def test_update_item_not_found(db_session: Session, client: TestClient, user_token):
+async def test_update_item_not_found(db_session: AsyncSession, client: AsyncClient, user_token):
     data = {"name": "updated_name", "description": "updated_description", "price": 100, "tax": 50}
-    response = client.patch(
+    response = await client.patch(
         "/items/update/-1",
         headers=user_token,
         json=data
@@ -74,10 +74,10 @@ def test_update_item_not_found(db_session: Session, client: TestClient, user_tok
     assert response.status_code == 404
     assert response.json()["detail"] == "Item not found"
 
-def test_update_item_not_owner(db_session: Session, client: TestClient, test_item: Item):
-    headers = random_user_token(db_session, client)
+async def test_update_item_not_owner(db_session: AsyncSession, client: AsyncClient, test_item: Item):
+    headers = await random_user_token(db_session, client)
     data = {"name": "updated_name", "description": "updated_description", "price": 100, "tax": 50}
-    response = client.patch(
+    response = await client.patch(
         f"/items/update/{test_item.id}",
         headers=headers,
         json=data
@@ -85,25 +85,25 @@ def test_update_item_not_owner(db_session: Session, client: TestClient, test_ite
     assert response.status_code == 400
     assert response.json()["detail"] == "You not the owner of the item"
 
-def test_delete_item(db_session: Session, client: TestClient, test_item: Item, user_token):
-    response = client.delete(
+async def test_delete_item(db_session: AsyncSession, client: AsyncClient, test_item: Item, user_token):
+    response = await client.delete(
         f"items/delete/{test_item.id}",
         headers=user_token,
     )
     assert response.status_code == 200
     assert response.json()["message"] == "item deleted"
 
-def test_delete_item_not_found(db_session: Session, client: TestClient, user_token):
-    response = client.delete(
+async def test_delete_item_not_found(db_session: AsyncSession, client: AsyncClient, user_token):
+    response = await client.delete(
         "items/delete/-1",
         headers=user_token,
     )
     assert response.status_code == 404
     assert response.json()["detail"] == "Item not found"
 
-def test_delete_item_not_owner(db_session: Session, client: TestClient, test_item: Item):
-    headers = random_user_token(db_session, client)
-    response = client.delete(
+async def test_delete_item_not_owner(db_session: AsyncSession, client: AsyncClient, test_item: Item):
+    headers = await random_user_token(db_session, client)
+    response = await client.delete(
         f"/items/delete/{test_item.id}",
         headers=headers,
     )
