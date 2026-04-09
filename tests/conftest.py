@@ -32,7 +32,7 @@ async def db_session():
 
 @pytest.fixture
 async def client(db_session):
-    def override_get_test_session():
+    async def override_get_test_session():
         try:
             yield db_session
         finally:
