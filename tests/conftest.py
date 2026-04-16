@@ -1,17 +1,21 @@
+import logging
 import sys
-from fakeredis import FakeAsyncRedis
 from pathlib import Path
+
+from fakeredis import FakeAsyncRedis
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
-import pytest
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncSession
-from sqlalchemy.pool import StaticPool
 from unittest.mock import patch
 
-from main import ap
-from app.models import User, Item
+import pytest
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
+
+from app.core.security import hash_password
 from app.database import Base, get_async_session
-from app.api.dependencies import hash_password
+from app.models import Item, User
+from main import ap
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 test_engine = create_async_engine(
@@ -50,6 +54,12 @@ async def mock_redis():
     with patch("app.core.redis_client.redis_client", fake):
         with patch("app.api.endpoints.posts.redis_client", fake):
             yield fake
+
+@pytest.fixture(autouse=True)
+def supress_logs():
+    logging.disable(logging.WARNING)
+    yield
+    logging.disable(logging.NOTSET)
 
 @pytest.fixture
 async def test_user(db_session: AsyncSession):

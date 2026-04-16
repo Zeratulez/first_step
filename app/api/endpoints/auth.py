@@ -1,16 +1,21 @@
 from datetime import timedelta
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Body, status
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import EmailStr
 
-from app.schemas import user_schema
+from fastapi import APIRouter, Body, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import EmailStr
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.dependencies import Token, authenticate_user
+from app.core.config import settings
+from app.core.security import (
+    create_access_token,
+    hash_password,
+    verify_password_reset_token,
+)
 from app.crud import crud_user
 from app.database import get_async_session
-from app.api.dependencies import authenticate_user, Token
-from app.core.security import create_access_token, hash_password, verify_password_reset_token
-from app.core.config import settings
+from app.schemas import user_schema
 
 router = APIRouter(
     prefix="/auth",

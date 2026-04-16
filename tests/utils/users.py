@@ -1,9 +1,10 @@
-from sqlalchemy.ext.asyncio import AsyncSession
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
 from app.models import User
 from tests.utils.utils import random_lower_string
+
 
 async def create_random_user(db_session: AsyncSession):
     user = User(

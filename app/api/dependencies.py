@@ -1,18 +1,19 @@
-import structlog
 from typing import Annotated
+
+import structlog
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
-from jose import jwt, JWTError
 
-from app.models.user import User
-from app.database import get_async_session
-from app.crud import crud_user
 from app.core.config import settings
-from app.schemas.user_schema import UserInDB
 from app.core.security import verify_password
+from app.crud import crud_user
+from app.database import get_async_session
+from app.models.user import User
+from app.schemas.user_schema import UserInDB
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 

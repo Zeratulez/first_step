@@ -1,11 +1,12 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas import comment_schema, user_schema, comment_like_schema
-from app.database import get_async_session
-from app.crud import crud_comments, crud_likes
 from app.api.dependencies import get_current_user
+from app.crud import crud_comments, crud_likes
+from app.database import get_async_session
+from app.schemas import comment_like_schema, comment_schema, user_schema
 
 router = APIRouter(
     prefix="/comments",

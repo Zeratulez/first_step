@@ -1,11 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tests.utils.users import create_random_user
-from tests.utils.posts import create_random_post
-from tests.utils.utils import random_lower_string
 from app.models.comment import Comment
-from app.models.user import User
 from app.models.post import Post
+from app.models.user import User
+from tests.utils.posts import create_random_post
+from tests.utils.users import create_random_user
+from tests.utils.utils import random_lower_string
+
 
 async def create_random_comment(db_session: AsyncSession, user: User = None, post: Post = None):
     if user is None:

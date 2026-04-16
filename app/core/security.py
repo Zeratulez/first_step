@@ -1,10 +1,10 @@
-from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
+
+from jose import JWTError, jwt
 from pwdlib import PasswordHash
 from pydantic import EmailStr
 
 from app.core.config import settings
-
 
 password_hash = PasswordHash.recommended()
 

@@ -1,9 +1,9 @@
+from fastapi.encoders import jsonable_encoder
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.encoders import jsonable_encoder
 
-from app.models import User
 from app.crud import crud_user
+from app.models import User
 
 
 async def test_create_user(db_session: AsyncSession, client: AsyncClient):

@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class PostBase(BaseModel):
     title: str = Field(min_length=3, max_length=30)

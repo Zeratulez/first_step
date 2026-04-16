@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.api.endpoints import items, auth, posts, comments, users
+from app.api.endpoints import auth, comments, items, posts, users
 from app.core.logging import setup_logging
 from app.middleware.logging import LoggingMiddleware
 

@@ -1,13 +1,14 @@
 import json
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas import post_schema, user_schema, comment_schema, post_like_schema
-from app.database import get_async_session
-from app.crud import crud_posts, crud_comments, crud_likes
 from app.api.dependencies import get_current_user
-from app.core.redis_client import redis_client, invalidate_cache
+from app.core.redis_client import invalidate_cache, redis_client
+from app.crud import crud_comments, crud_likes, crud_posts
+from app.database import get_async_session
+from app.schemas import comment_schema, post_like_schema, post_schema, user_schema
 
 router = APIRouter(
     prefix="/posts",

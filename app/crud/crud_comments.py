@@ -1,10 +1,11 @@
 from sqlalchemy import select
-from sqlalchemy.orm import contains_eager
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import contains_eager
 
 from app.models.comment import Comment
 from app.models.user import User
 from app.schemas import comment_schema, user_schema
+
 
 async def get_comment_by_id(session: AsyncSession, comment_id: int):
     return await session.get(Comment, comment_id)

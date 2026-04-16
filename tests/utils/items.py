@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models import Item
 from tests.utils.users import create_random_user
 from tests.utils.utils import random_lower_string
-from app.models import Item
 
 
 async def create_random_item(db_session: AsyncSession):

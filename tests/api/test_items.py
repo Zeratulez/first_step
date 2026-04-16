@@ -1,10 +1,11 @@
-from httpx import AsyncClient
 from fastapi.encoders import jsonable_encoder
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Item, User
 from tests.utils.items import create_random_item
 from tests.utils.users import random_user_token
+
 
 async def test_create_item(db_session: AsyncSession, client: AsyncClient, user_token):
     data = {"name": "bar", "description": "karamba", "price": 10, "tax": 2.5}

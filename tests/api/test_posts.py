@@ -1,10 +1,11 @@
-from httpx import AsyncClient
 from fastapi.encoders import jsonable_encoder
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Post, PostLike, User
 from tests.utils.posts import create_random_post
 from tests.utils.users import random_user_token
+
 
 async def test_create_post(db_session: AsyncSession, client: AsyncClient, user_token):
     data = {"title": "Testing post", "content": "blablabla"}

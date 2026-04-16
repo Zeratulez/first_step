@@ -1,15 +1,17 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, Index
-from sqlalchemy.orm import Mapped, mapped_column,relationship
+from sqlalchemy import Index, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.database import Base
 
 if TYPE_CHECKING:
-    from app.models.item import Item
-    from app.models.post import Post
     from app.models.comment import Comment
-    from app.models.like import PostLike, CommentLike
+    from app.models.item import Item
+    from app.models.like import CommentLike, PostLike
+    from app.models.post import Post
 
 class User(Base):
     __tablename__ = "users"

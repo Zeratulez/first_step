@@ -1,15 +1,24 @@
 from __future__ import annotations
+
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, ForeignKey, CheckConstraint, Index, UniqueConstraint, text
+from sqlalchemy import (
+    CheckConstraint,
+    ForeignKey,
+    Index,
+    String,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.database import Base
 
 if TYPE_CHECKING:
-    from app.models.user import User
-    from app.models.post import Post
     from app.models.comment import Comment
+    from app.models.post import Post
+    from app.models.user import User
 
 class PostLike(Base):
     __tablename__ = "post_likes"

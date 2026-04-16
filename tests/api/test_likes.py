@@ -1,11 +1,12 @@
-from httpx import AsyncClient
 from fastapi.encoders import jsonable_encoder
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import User
-from tests.utils.posts import create_random_post
-from tests.utils.comments import create_random_comment
 from app.crud.crud_likes import like_comment, like_post
+from app.models import User
+from tests.utils.comments import create_random_comment
+from tests.utils.posts import create_random_post
+
 
 async def test_like_post(db_session: AsyncSession, client: AsyncClient, test_user: User, user_token):
     post = await create_random_post(db_session)

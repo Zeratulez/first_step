@@ -1,10 +1,11 @@
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.like import PostLike, CommentLike
-from app.models.user import User
-from app.models.post import Post
 from app.models.comment import Comment
+from app.models.like import CommentLike, PostLike
+from app.models.post import Post
+from app.models.user import User
+
 
 async def like_post(
         session: AsyncSession,
