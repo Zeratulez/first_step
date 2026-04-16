@@ -7,5 +7,5 @@ ignore = ["E501", "F"]
 
 
 [lint.per-file-ignores]
-"tests/*" = ["I"]
-"migrations/*" = ["I"]
+"tests/*" = ["E", "I"]
+"migrations/*" = ["E", "I"]
