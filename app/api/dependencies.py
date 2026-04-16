@@ -70,3 +70,6 @@ async def authenticate_user(session: AsyncSession, username: str, password: str)
         return False
     logger.info("authentication_successful", username=username)
     return UserInDB.model_validate(user)
+
+async def hi():
+    print("hi")
