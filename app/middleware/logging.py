@@ -1,19 +1,22 @@
 import time
 import uuid
 import structlog
+from structlog.contextvars import bind_contextvars, clear_contextvars
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-logger = structlog.get_logger()
+
+logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
+        clear_contextvars()
         request_id = str(uuid.uuid4())[:8]
 
         start_time = time.perf_counter()
 
+        bind_contextvars(request_id=request_id)
         log = logger.bind(
-            request_id=request_id,
             method=request.method,
             path=request.url.path,
         )

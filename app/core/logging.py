@@ -4,6 +4,7 @@ import structlog
 
 def setup_logging(is_production: bool = False) -> None:
     shared_processors = [
+        structlog.contextvars.merge_contextvars,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),

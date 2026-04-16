@@ -1,7 +1,6 @@
 import structlog
 from typing import Annotated
-from datetime import datetime, timedelta, timezone
-from fastapi import Depends, HTTPException, status, Path
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,9 +12,9 @@ from app.database import get_async_session
 from app.crud import crud_user
 from app.core.config import settings
 from app.schemas.user_schema import UserInDB
-from app.core.security import verify_password, hash_password
+from app.core.security import verify_password
 
-logger = structlog.get_logger()
+logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 

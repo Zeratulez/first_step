@@ -8,7 +8,7 @@ from pydantic import EmailStr
 from app.schemas import user_schema
 from app.crud import crud_user
 from app.database import get_async_session
-from app.api.dependencies import hash_password, authenticate_user, Token
+from app.api.dependencies import authenticate_user, Token
 from app.core.security import create_access_token, hash_password, verify_password_reset_token
 from app.core.config import settings
 
